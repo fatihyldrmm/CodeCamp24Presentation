@@ -1,0 +1,163 @@
+apiVersion : autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: django-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: django-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: django-apm-agent-demo
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: django-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: django-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django
+    app.kubernetes.io/managed-by: Helm
+data:
+  init: default
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: django-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: apm-agent-demo
+      app.kubernetes.io/instance: django
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: apm-agent-demo
+        app.kubernetes.io/instance: django
+        sidecar.istio.io/inject: "true"
+    spec:
+      imagePullSecrets:
+        - name: harbor-credentials
+      containers:
+        - name: django-apm-agent-demo
+          workingDir: /home/djangouser/pythonserver  # Doğru dizin burası olmalı
+          command: ["python"]
+          args:
+            - ./djangoServer/manage.py
+            - runserver
+            - 0.0.0.0:8085
+          image: "k8s-master-codecamp24.obss.io:30003/codecamp/fatih/djangoapp:latest"
+          securityContext:
+            null
+          imagePullPolicy: Always
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: djangoServer.settings
+          livenessProbe:
+            httpGet:
+              path: /devops/
+              port: 8085  
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /devops/
+              port: 8085  
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          ports:
+          - containerPort: 8085 
+            name: http
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 900m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          env:
+            - name: init
+              valueFrom:
+                configMapKeyRef:
+                  name: django-apm-agent-demo
+                  key: init
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 10
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: fullname
+                      operator: In
+                      values:
+                        - django-apm-agent-demo
+                topologyKey: kubernetes.io/hostname
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-credentials
+  namespace: fatih
+  labels:
+    helm.sh/chart: django-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django
+    app.kubernetes.io/managed-by: Helm
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJrOHMtbWFzdGVyLWNvZGVjYW1wMjQub2Jzcy5pbzozMDAwMyI6IHsKICAgICAgInVzZXJuYW1lIjogImZhdGloLnlpbGRpcmltIiwKICAgICAgInBhc3N3b3JkIjogIjM3NE9IYlBMelF1dyIsCiAgICAgICJlbWFpbCI6ICJmYXRpaHlsZHJtMzY5M0BnbWFpbC5jb20iLAogICAgICAiYXV0aCI6ICJabUYwYVdndWVXbHNaR2x5YVcwNk16YzBUMGhpVUV4NlVYVjMiCiAgICB9CiAgfQp9Cg==
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: django-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 8085  
+      targetPort: 8085
+      protocol: TCP
+      name: http
+      nodePort: 30010
+  selector:
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: django

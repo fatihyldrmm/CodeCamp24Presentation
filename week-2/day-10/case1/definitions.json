@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "name": "rabbitmq",
+      "password_hash": "t/iVTNS5dIhgr4OP/LmSRF0J0WnVNKQCMVFReLXIo3Cosvr8",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "rabbitmq",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "queue-1",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "queue-2",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "my-exchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "my-exchange",
+      "vhost": "/",
+      "destination": "queue-1",
+      "destination_type": "queue",
+      "routing_key": "route-1",
+      "arguments": {}
+    },
+    {
+      "source": "my-exchange",
+      "vhost": "/",
+      "destination": "queue-2",
+      "destination_type": "queue",
+      "routing_key": "route-2",
+      "arguments": {}
+    }
+  ]
+}

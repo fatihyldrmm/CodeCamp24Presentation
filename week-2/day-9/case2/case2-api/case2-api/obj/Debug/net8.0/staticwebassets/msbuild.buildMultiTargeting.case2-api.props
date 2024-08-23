@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\case2-api.props" />
+</Project>

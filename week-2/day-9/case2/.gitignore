@@ -1,0 +1,8 @@
+# Visual Studio ile ilgili dosyalar ve klasörler
+.vs/
+.vscode/
+*.vscode
+*.user
+*.suo
+*.userosscache
+*.sln.docstates

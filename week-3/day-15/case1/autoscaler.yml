@@ -1,0 +1,24 @@
+apiVersion : autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flask-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: flask-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: flask
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-apm-agent-demo
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80

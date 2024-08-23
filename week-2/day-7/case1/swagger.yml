@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: Banking Service
+  description: |-
+    
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: fatihyldrm3693@gmail.com
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://petstore3.swagger.io/api/v3
+tags:
+  - name: money
+    description: Everything about your money transfers
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+    
+
+paths:
+  /transfers/get{transferId}:
+    get:
+      tags:
+        - money
+      summary: Get transfer details
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved transfer details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  TransferID:
+                    type: integer
+                  SenderID:
+                    type: integer
+                  RecieverID:
+                    type: integer
+                  Amount:
+                    type: integer
+                  Currency:
+                    type: string
+        '404':
+          description: Transfer not found
+  /transfers/post:
+    post:
+      tags:
+      - money
+      summary: Initiate a new transfer
+      requestBody:
+      
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                SenderID:
+                  type: integer
+                RecieverID:
+                  type: integer
+                Amount:
+                  type: integer
+                Currency:
+                  type: string
+      responses:
+        '201':
+          description: Successfully initiated transfer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transferId:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+          
+  /transfers/delete{transferId}:
+    delete:
+      tags:
+      - money
+      summary: Cancel a transfer
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully canceled transfer
+        '404':
+          description: Transfer not found
+          
+          
+  /accounts/getAccountInfo{accountId}:
+    get:
+      tags:
+      - account
+      summary: Get account details
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved account details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: integer
+                  name:
+                    type: string
+                  balance:
+                    type: number
+                  currency:
+                    type: string
+        '404':
+          description: Account not found
+          
+  /accounts/createAccount:
+    post:
+      tags:
+      - account
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                initialDeposit:
+                  type: number
+                name:
+                  type: string
+                currency:
+                  type: string
+      responses:
+        '201':
+          description: Successfully created account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+          
+  /accounts/deleteAccount{accountId}:
+    delete:
+      tags:
+      - account
+      summary: Delete an account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully deleted account
+        '404':
+          description: Account not found
+          
+  
+components:
+  schemas:
+    Transfer:
+      type: object
+      properties:
+        TransferID:
+          type: integer
+          format: int64
+          example: 100000
+        SenderID:
+          type: integer
+          format: int64
+          example: 100000
+        RecieverID:
+          type: integer
+          format: int64
+          example: 100000
+        Amount:
+          type: integer
+          format: int64
+          example: 100000
+        Currency:
+          type: string
+          example: '$'
+          
+    Account:
+      type: object
+      properties:
+        AccountID:
+          type: integer
+          format: int64
+          example: 100000
+        Name:
+          type: string
+          example: 'fatih yildirim'
+        Balance:
+          type: number
+          example: 100
+        Currency:
+          type: string
+          example: '$'
+          
+  

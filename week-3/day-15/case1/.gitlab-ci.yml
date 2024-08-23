@@ -1,0 +1,65 @@
+stages:
+  - build
+  - test
+  - docker
+  - deploy
+
+build:
+  stage: build
+  image: python:3.9-slim
+  script:
+    - pip install flask
+    - python flask.py
+
+test:
+  stage: test
+  image: python:3.9-slim
+  script:
+    - pip install flask
+    - if [ -f flask.py ]; then
+        echo "test.py file exists. Running tests...";
+        python flask.py;
+      else
+        echo "No flask.py file found. Skipping tests.";
+      fi
+  
+docker:
+  image: docker:stable
+  stage: docker
+  variables:
+    DOCKER_BUILD_DIR: "."
+    DOCKER_BUILD_FILE: "Dockerfile"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_ENV: ${CI_COMMIT_BRANCH}
+    DOCKER_IMAGE_URI: https://k8s-master-codecamp24.obss.io:30003/codecamp
+  services:
+    - name: docker:26.0.0-dind
+      alias: docker
+      entrypoint: ["dockerd-entrypoint.sh", "--tls=false"]
+  before_script:
+    - export DOCKER_IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
+  script:
+    - |
+      docker login -u fatih.yildirim -p 374OHbPLzQuw https://k8s-master-codecamp24.obss.io:30003/
+      docker build -t "k8s-master-codecamp24.obss.io:30003/codecamp/fatih/pythontest:cd" .
+      docker push "k8s-master-codecamp24.obss.io:30003/codecamp/fatih/pythontest:cd"
+
+deploy:
+  stage: deploy
+  image: 
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  script:
+    - kubectl config set-cluster codecamp --server=https://yagiz-codecamp24.obss.io/k8s/clusters/c-m-w8vrtgvc --insecure-skip-tls-verify
+    - kubectl config set-credentials codecamp --token=kubeconfig-u-g7wxkb7qr4:mc8jmznrghgtlpsqh4xs9cj76kqlvfc7gqzfxqdcgltz98dm6nd6vv
+    - kubectl config set-context codecamp --cluster=codecamp --user=codecamp
+    - kubectl config use-context codecamp
+    - kubectl apply -f ./autoscaler.yml
+    - kubectl apply -f ./configmap.yml
+    - kubectl apply -f ./deployment.yml
+    - kubectl apply -f ./secret.yml
+    - kubectl apply -f ./service.yml
+    - kubectl get pods -n fatih
+    - kubectl get svc -n fatih

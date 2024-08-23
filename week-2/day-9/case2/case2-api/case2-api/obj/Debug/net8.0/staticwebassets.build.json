@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "GQYfPlJLctHU+vnC1obzVtazgJkM9sJR6GurD+A4eCg=",
+  "Source": "case2-api",
+  "BasePath": "_content/case2-api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

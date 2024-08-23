@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'jira'
+    static_configs:
+      - targets: ['jira:8080']

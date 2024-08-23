@@ -1,0 +1,53 @@
+---
+- name: Manage local file
+  hosts: localhost
+  tasks:
+    - name: Create a new file
+      file:
+        path: /tmp/hello_world.txt
+        state: touch
+        mode: '0644'
+
+    - name: Write "Hello World" to the file
+      copy:
+        content: "Hello World\n"
+        dest: /tmp/hello_world.txt
+
+    - name: Print file content to console
+      command: cat /tmp/hello_world.txt
+      register: file_content
+
+    - name: Show the content in the console
+      debug:
+        msg: "{{ file_content.stdout }}"
+
+    - name: Append "Merhaba Dünya" to the file
+      lineinfile:
+        path: /tmp/hello_world.txt
+        line: "Merhaba Dünya"
+
+    - name: Print updated file content to console
+      command: cat /tmp/hello_world.txt
+      register: updated_file_content
+
+    - name: Show the updated content in the console
+      debug:
+        msg: "{{ updated_file_content.stdout }}"
+
+    - name: Check if backup directory exists
+      stat:
+        path: /tmp/backup
+      register: backup_dir
+
+    - name: Create backup directory if it does not exist
+      file:
+        path: /tmp/backup
+        state: directory
+        mode: '0755'
+      when: not backup_dir.stat.exists
+
+    - name: Copy the file to another directory
+      copy:
+        src: /tmp/hello_world.txt
+        dest: /tmp/backup/hello_world.txt
+        remote_src: yes

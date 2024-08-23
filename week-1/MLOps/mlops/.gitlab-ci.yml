@@ -1,0 +1,36 @@
+stages:
+- train
+- notify
+
+train-candidate:
+  stage: train
+  image: python:3.10.14-slim
+#  tags:
+#  - saas-linux-medium-amd64-gpu-standard
+  before_script:
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+  - python loan_prediction.py
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+  artifacts:
+    paths:
+    - ./metrics_report.md
+    - ./plots/ROC_curve.png
+
+publish-metrics-comment:
+  stage: notify
+  image:
+    name: gitlab/glab
+    entrypoint: [ "" ]
+  script:
+  - glab auth login -t $CI_JOB_TOKEN
+  - glab -R "$CI_PROJECT_URL" mr note $CI_MERGE_REQUEST_IID -m "$(cat metrics_report.md)"
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+  when: on_success
+  needs:
+  - train-candidate

@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    environment {
+        CI = 'true'
+    }
+    stages {
+        stage('Code Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Install Python and Pip') {
+            steps {
+                script {
+                    sh 'apt-get update && apt-get install -y python3 python3-pip'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh 'pip3 install -r requirements.txt'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                script {
+                    sh 'python3 manage.py test'
+                }
+            }
+        }
+        stage('Dockerize') {
+            steps {
+                script {
+                    sh 'docker build -t my-django-app .'
+                }
+            }
+        }
+        stage('Push Image to Harbor') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'harbor-creds', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
+                        sh 'docker login harbor.mydomain.com -u $HARBOR_USER -p $HARBOR_PASS'
+                        sh 'docker tag my-django-app harbor.mydomain.com/myproject/my-django-app'
+                        sh 'docker push harbor.mydomain.com/myproject/my-django-app'
+                    }
+                }
+            }
+        }
+        stage('Container Scanning') {
+            steps {
+                script {
+                    sh 'trivy image harbor.mydomain.com/myproject/my-django-app'
+                }
+            }
+        }
+    }
+}

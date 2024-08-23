@@ -1,0 +1,82 @@
+stages:
+  - build
+  - test
+  - docker
+  - sonar
+  - deploy
+
+build:
+  stage: build
+  image: python:3.9-slim
+  script:
+    - pip install django
+    - django-admin startproject myproject
+    - cd myproject
+    - python manage.py migrate
+
+test:
+  stage: test
+  image: python:3.9-slim
+  script:
+    - pip install django
+    - if [ -f manage.py ]; then
+        echo "manage.py file exists. Running tests...";
+        python manage.py test;
+      else
+        echo "No manage.py file found. Skipping tests.";
+      fi
+  
+docker:
+  image: docker:stable
+  stage: docker
+  variables:
+    DOCKER_BUILD_DIR: "."
+    DOCKER_BUILD_FILE: "Dockerfile"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_ENV: ${CI_COMMIT_BRANCH}
+    DOCKER_IMAGE_URI: https://k8s-master-codecamp24.obss.io:30003/codecamp
+  services:
+    - name: docker:26.0.0-dind
+      alias: docker
+      entrypoint: ["dockerd-entrypoint.sh", "--tls=false"]
+  before_script:
+    - export DOCKER_IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
+  script:
+    - |
+      docker login -u codecampuser -p codecampuser
+      docker build -t "k8s-master-codecamp24.obss.io:30003/codecamp/djangotest:example" .
+      docker login -u fatihyldrmm -p 374OHbPLzQuw https://k8s-master-codecamp24.obss.io:30003/
+      docker push "k8s-master-codecamp24.obss.io:30003/codecamp/djangotest:fatih"
+
+sonarqube:
+  stage: sonar
+  image:
+    name: sonarsource/sonar-scanner-cli:5.0.1
+    entrypoint: [""]
+  variables:
+    SONAR_SCANNER_OPTS: "-Xmx1024m"
+    GIT_DEPTH: 0
+    SONAR_HOST_URL: https://codecamp24-sonarqube.obss.io
+    SONAR_TOKEN: "410e440de6981675e579a5ac8ed41328871174af"
+  before_script:
+    - echo "192.168.210.103 codecamp24-sonarqube.obss.io" >> /etc/hosts
+  script:
+    - |
+      sonar-scanner -Dsonar.userHome='/tmp' -Dsonar.qualitygate.wait=true \
+        -Dsonar.projectKey="${CI_PROJECT_NAMESPACE//\//-}-$CI_PROJECT_NAME" \
+        -Dsonar.projectName="$CI_PROJECT_TITLE" \
+        -Dsonar.projectVersion="$CI_COMMIT_REF_SLUG" \
+        -Dsonar.host.url="${SONAR_HOST_URL}" \
+        -Dsonar.login="${SONAR_TOKEN}"
+  allow_failure: true
+
+deploy:
+  stage: deploy
+  image: python:3.9-slim
+  script:
+    - pip install django
+    - if [ -f manage.py ]; then
+        echo "manage.py file exists. Running server...";
+        python manage.py runserver

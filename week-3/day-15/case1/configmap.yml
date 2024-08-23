@@ -1,0 +1,12 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: flask-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: flask-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: flask
+    app.kubernetes.io/managed-by: Helm
+data:
+  init: default

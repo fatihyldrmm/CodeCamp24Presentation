@@ -1,0 +1,1 @@
+İki server'ın birbiri ile haberleşmesi için subnet mask'ını 16 bit yaparak aynı ağda olamlarını sağladım.

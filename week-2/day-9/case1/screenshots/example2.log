@@ -1,0 +1,20 @@
+2020-10-11T09:49:35Z INFO variable server value is tomcat
+2020-03-14T22:50:34Z ERROR cannot find the requested resource
+2020-01-02T14:58:40Z INFO initializing the bootup
+2020-06-04T06:56:04Z DEBUG initializing checksum
+2020-05-07T03:07:11Z INFO variable server value is tomcat
+2020-05-07T03:18:15Z INFO reading files
+2020-05-08T15:46:22Z INFO rebooting system
+2020-05-08T15:50:49Z INFO shutting down required services
+2020-05-08T15:51:02Z INFO killing process pid: 156
+2020-05-08T15:51:05Z INFO killing process pid: 178
+2020-05-08T15:51:12Z INFO killing process pid: 9875
+2020-05-08T15:51:13Z INFO killing process pid: 6548
+2020-05-08T15:51:15Z INFO killing process pid: 5645
+2020-05-08T15:55:30Z INFO shutting down
+2020-05-08T15:56:00Z INFO variable server value is tomcat
+2020-05-08T15:56:10Z ERROR cannot find the requested resource
+2020-05-08T15:56:51Z INFO initializing the bootup
+2020-05-08T15:57:05Z DEBUG initializing checksum
+
+

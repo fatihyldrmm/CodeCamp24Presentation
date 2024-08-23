@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-apm-agent-demo
+  namespace: fatih
+  labels:
+    helm.sh/chart: flask-apm-agent-demo-0.1.0
+    app.kubernetes.io/name: apm-agent-demo
+    app.kubernetes.io/instance: flask
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: apm-agent-demo
+      app.kubernetes.io/instance: flask
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: apm-agent-demo
+        app.kubernetes.io/instance: flask
+        sidecar.istio.io/inject: "true"
+    spec:
+      imagePullSecrets:
+        - name: harbor-credentials
+      containers:
+        - name: flask-apm-agent-demo
+          workingDir: /home/flaskuser/pythonserver  # Doğru dizin burası olmalı
+          command: ["python"]
+          args:
+            - ./flaskServer/manage.py
+            - runserver
+            - 0.0.0.0:8085
+          image: "k8s-master-codecamp24.obss.io:30003/codecamp/fatih/flaskapp:latest"
+          securityContext:
+            null
+          imagePullPolicy: Always
+          env:
+            - name: FLASK_SETTINGS_MODULE
+              value: flaskServer.settings
+          livenessProbe:
+            httpGet:
+              path: /devops/
+              port: 8085  
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /devops/
+              port: 8085  
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          ports:
+          - containerPort: 8085 
+            name: http
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 900m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          env:
+            - name: init
+              valueFrom:
+                configMapKeyRef:
+                  name: flask-apm-agent-demo
+                  key: init
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 10
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: fullname
+                      operator: In
+                      values:
+                        - flask-apm-agent-demo
+                topologyKey: kubernetes.io/hostname
